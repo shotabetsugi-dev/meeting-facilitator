@@ -9,12 +9,12 @@ export function Textarea({ label, error, className = '', ...props }: TextareaPro
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
           {label}
         </label>
       )}
       <textarea
-        className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none ${
+        className={`w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)] focus:border-transparent placeholder:text-[var(--foreground)]/30 resize-none ${
           error ? 'border-red-500' : ''
         } ${className}`}
         {...props}

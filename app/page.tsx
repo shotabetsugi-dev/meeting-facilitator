@@ -59,19 +59,22 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">読み込み中...</div>
+        <div className="text-xl text-[var(--foreground)]/60">読み込み中...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto py-12 px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            社内定例会議 AIファシリテーター
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-middle)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+              Lays-Lop
+            </span>
+            <span className="text-[var(--accent-blue)]"> Internal meeting</span>
           </h1>
-          <p className="text-gray-600">
+          <p className="text-[var(--foreground)]/60">
             会議を選択するか、新しい会議を作成してください
           </p>
         </div>
@@ -88,7 +91,7 @@ export default function Home() {
             </Button>
           ) : (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">新規会議を作成</h2>
+              <h2 className="text-xl font-bold text-[var(--foreground)]">新規会議を作成</h2>
               <Input
                 type="date"
                 value={newMeetingDate}
@@ -113,10 +116,10 @@ export default function Home() {
 
         {/* 会議一覧 */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">最近の会議</h2>
+          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">最近の会議</h2>
           {meetings.length === 0 ? (
             <Card>
-              <p className="text-center text-gray-500 py-8">
+              <p className="text-center text-[var(--foreground)]/50 py-8">
                 まだ会議がありません。新しい会議を作成してください。
               </p>
             </Card>
@@ -130,16 +133,16 @@ export default function Home() {
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold">
+                      <span className="text-lg font-bold text-[var(--foreground)]">
                         {formatDate(meeting.meeting_date)}
                       </span>
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${
                           meeting.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-[var(--accent-green)]/20 text-[var(--accent-green)]'
                             : meeting.status === 'in_progress'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-[var(--accent-blue)]/20 text-[var(--accent-blue)]'
+                            : 'bg-[var(--foreground)]/10 text-[var(--foreground)]/60'
                         }`}
                       >
                         {meeting.status === 'completed'
@@ -150,7 +153,7 @@ export default function Home() {
                       </span>
                     </div>
                     {meeting.participants && meeting.participants.length > 0 && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-[var(--foreground)]/60">
                         参加者: {meeting.participants.join(', ')}
                       </p>
                     )}

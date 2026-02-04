@@ -221,5 +221,5 @@ SELECT
 FROM sales_metrics sm
 JOIN meetings m ON sm.meeting_id = m.id
 JOIN sales_channels sc ON sm.channel_id = sc.id
-GROUP BY TO_CHAR(m.meeting_date, 'YYYY-MM'), sc.name, sc.color
+GROUP BY TO_CHAR(m.meeting_date, 'YYYY-MM'), sc.name, sc.color, sc.sort_order
 ORDER BY year_month DESC, sc.sort_order;

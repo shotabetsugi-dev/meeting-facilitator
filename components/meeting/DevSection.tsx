@@ -51,16 +51,16 @@ export function DevSection({ meetingId }: DevSectionProps) {
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b">
-            <th className="text-left py-2 px-4">案件名</th>
-            <th className="text-center py-2 px-4">シグナル</th>
-            <th className="text-center py-2 px-4">温度</th>
-            <th className="text-left py-2 px-4">状況</th>
+          <tr className="border-b border-[var(--card-border)]">
+            <th className="text-left py-2 px-4 text-[var(--foreground)]">案件名</th>
+            <th className="text-center py-2 px-4 text-[var(--foreground)]">シグナル</th>
+            <th className="text-center py-2 px-4 text-[var(--foreground)]">温度</th>
+            <th className="text-left py-2 px-4 text-[var(--foreground)]">状況</th>
           </tr>
         </thead>
         <tbody>
           {projects.map((project) => (
-            <tr key={project.id} className="border-b">
+            <tr key={project.id} className="border-b border-[var(--card-border)]">
               <td className="py-2 px-4">
                 <Input
                   value={project.project_name}
@@ -75,7 +75,7 @@ export function DevSection({ meetingId }: DevSectionProps) {
                   onChange={(e) =>
                     updateProject(project.id, 'signal', e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                 >
                   <option value="順調">順調</option>
                   <option value="要調整">要調整</option>
@@ -88,7 +88,7 @@ export function DevSection({ meetingId }: DevSectionProps) {
                   onChange={(e) =>
                     updateProject(project.id, 'temperature', e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
                 >
                   <option value="良好">良好</option>
                   <option value="普通">普通</option>
@@ -134,7 +134,7 @@ export function DevSection({ meetingId }: DevSectionProps) {
                 type: e.target.value as 'client' | 'internal',
               })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            className="w-full px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-blue)]"
           >
             <option value="client">受託開発</option>
             <option value="internal">内部開発</option>

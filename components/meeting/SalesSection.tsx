@@ -75,25 +75,25 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 px-4">媒体</th>
-                <th className="text-center py-2 px-4">着手</th>
-                <th className="text-center py-2 px-4">アポ</th>
-                <th className="text-center py-2 px-4">成約</th>
+              <tr className="border-b border-[var(--card-border)]">
+                <th className="text-left py-2 px-4 text-[var(--foreground)]">媒体</th>
+                <th className="text-center py-2 px-4 text-[var(--foreground)]">着手</th>
+                <th className="text-center py-2 px-4 text-[var(--foreground)]">アポ</th>
+                <th className="text-center py-2 px-4 text-[var(--foreground)]">成約</th>
               </tr>
             </thead>
             <tbody>
               {channels.map((channel) => {
                 const metric = salesMetrics.find((m) => m.channel_id === channel.id)
                 return (
-                  <tr key={channel.id} className="border-b">
+                  <tr key={channel.id} className="border-b border-[var(--card-border)]">
                     <td className="py-2 px-4">
                       <div className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: channel.color }}
                         />
-                        {channel.name}
+                        <span className="text-[var(--foreground)]">{channel.name}</span>
                       </div>
                     </td>
                     <td className="py-2 px-4">
@@ -150,7 +150,7 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
       <Card title="営業状況">
         <div className="space-y-4">
           {salesStatus.map((status) => (
-            <div key={status.id} className="border-b pb-4">
+            <div key={status.id} className="border-b border-[var(--card-border)] pb-4">
               <Input
                 value={status.company_name}
                 onChange={(e) =>

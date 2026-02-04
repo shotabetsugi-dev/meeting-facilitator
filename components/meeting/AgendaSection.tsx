@@ -52,7 +52,7 @@ export function AgendaSection({ meetingId }: AgendaSectionProps) {
         <Card key={agenda.id}>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="text-lg font-bold text-teal-600">
+              <span className="text-lg font-bold bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-purple)] bg-clip-text text-transparent">
                 Agenda{agenda.agenda_number}
               </span>
               <Input

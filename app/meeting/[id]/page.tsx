@@ -61,13 +61,13 @@ export default function MeetingPage() {
   if (!currentMeeting) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">会議が見つかりません</div>
+        <div className="text-xl text-[var(--foreground)]/60">会議が見つかりません</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header
         meetingId={meetingId}
         userName={userName}

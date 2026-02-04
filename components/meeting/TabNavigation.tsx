@@ -21,16 +21,16 @@ const tabs: Tab[] = [
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   return (
-    <div className="border-b border-gray-200">
+    <div className="border-b border-[var(--card-border)]">
       <nav className="flex space-x-8 px-6" aria-label="Tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+            className={`py-4 px-1 border-b-2 font-medium text-sm transition-all ${
               activeTab === tab.id
-                ? 'border-teal-500 text-teal-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-[var(--accent-blue)] text-[var(--accent-blue)]'
+                : 'border-transparent text-[var(--foreground)]/50 hover:text-[var(--accent-purple)] hover:border-[var(--accent-purple)]/50'
             }`}
           >
             {tab.label}

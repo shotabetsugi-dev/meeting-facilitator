@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "社内定例会議 AIファシリテーター",
-  description: "リアルタイム同期対応の会議支援Webアプリケーション",
+  title: "Lays-Lop Internal meeting",
+  description: "AI-powered meeting facilitator with realtime synchronization",
 };
 
 export default function RootLayout({

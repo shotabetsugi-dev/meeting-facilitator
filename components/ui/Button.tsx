@@ -14,13 +14,13 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+  const baseStyles = 'rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variantStyles = {
-    primary: 'bg-teal-500 text-white hover:bg-teal-600',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
-    danger: 'bg-red-500 text-white hover:bg-red-600',
-    success: 'bg-green-500 text-white hover:bg-green-600',
+    primary: 'bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-middle)] text-white hover:shadow-lg hover:shadow-[var(--gradient-start)]/20',
+    secondary: 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--card-border)] hover:border-[var(--accent-purple)]',
+    danger: 'bg-red-500/90 text-white hover:bg-red-500 hover:shadow-lg hover:shadow-red-500/20',
+    success: 'bg-[var(--accent-green)] text-white hover:shadow-lg hover:shadow-[var(--accent-green)]/20',
   }
 
   const sizeStyles = {

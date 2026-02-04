@@ -48,7 +48,7 @@ export function FreeSection({ meetingId }: FreeSectionProps) {
         <Card key={topic.id}>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-teal-600">
+              <span className="text-lg font-bold bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-purple)] bg-clip-text text-transparent">
                 議題 {index + 1}
               </span>
               <Button

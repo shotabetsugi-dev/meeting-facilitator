@@ -34,22 +34,22 @@ export function DebateTimer({ meetingId, debateId }: DebateTimerProps) {
             isDanger
               ? 'text-red-500 animate-pulse'
               : isWarning
-              ? 'text-yellow-500'
-              : 'text-gray-900'
+              ? 'text-[var(--accent-orange)]'
+              : 'text-[var(--accent-blue)]'
           }`}
         >
           {formatTime(timerState.remaining)}
         </div>
 
         {/* プログレスバー */}
-        <div className="h-2 bg-gray-200 rounded-full mt-4 overflow-hidden">
+        <div className="h-2 bg-[var(--card-border)] rounded-full mt-4 overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
               isDanger
                 ? 'bg-red-500'
                 : isWarning
-                ? 'bg-yellow-500'
-                : 'bg-teal-500'
+                ? 'bg-[var(--accent-orange)]'
+                : 'bg-[var(--accent-blue)]'
             }`}
             style={{ width: `${progress}%` }}
           />
