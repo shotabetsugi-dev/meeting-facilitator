@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(npm install:*)",
+      "Bash(test:*)",
+      "Bash(netstat:*)",
+      "Bash(cmd.exe /c \"taskkill /PID 15160 /F\")",
+      "Bash(powershell.exe -Command \"Stop-Process -Id 15160 -Force\")",
+      "Bash(git add:*)"
+    ]
+  }
+}
