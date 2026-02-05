@@ -31,9 +31,39 @@ export default function MeetingPage() {
 
   useEffect(() => {
     fetchMeeting()
-    // ユーザー名をプロンプトで取得（実際の実装では認証システムから取得）
-    const name = prompt('あなたの名前を入力してください') || 'ユーザー'
-    setUserName(name)
+    // ユーザー名をローカルストレージから取得（なければデフォルト値）
+    const storedName = localStorage.getItem('userName')
+    if (storedName) {
+      setUserName(storedName)
+    } else {
+      const name = prompt('あなたの名前を入力してください') || 'ユーザー'
+      localStorage.setItem('userName', name)
+      setUserName(name)
+    }
+
+    // meetingsテーブルのリアルタイム購読
+    const meetingChannel = supabase
+      .channel(`meeting-${meetingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'meetings',
+          filter: `id=eq.${meetingId}`,
+        },
+        (payload) => {
+          console.log('Meeting updated:', payload)
+          if (payload.new) {
+            setCurrentMeeting(payload.new as Meeting)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(meetingChannel)
+    }
   }, [meetingId])
 
   const fetchMeeting = async () => {

@@ -19,7 +19,9 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
   const startMeeting = async () => {
     if (!meetingId) return
 
-    await supabase
+    console.log('Starting meeting...', meetingId)
+
+    const { data, error } = await supabase
       .from('meetings')
       .update({
         status: 'in_progress',
@@ -27,6 +29,16 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
         start_time: new Date().toISOString(),
       })
       .eq('id', meetingId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Failed to start meeting:', error)
+      alert('会議の開始に失敗しました: ' + error.message)
+      return
+    }
+
+    console.log('Meeting started successfully:', data)
 
     // Trigger AI insights generation
     if (onMeetingStart) {
