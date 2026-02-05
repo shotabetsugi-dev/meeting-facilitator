@@ -50,33 +50,37 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
     field: 'leads_count' | 'appointments_count' | 'contracts_count',
     value: string
   ) => {
-    const numValue = parseInt(value) || 0
+    // Allow empty string during editing
+    const numValue = value === '' ? 0 : parseInt(value, 10)
 
-    // Optimistic update
-    setLocalMetrics(prev =>
-      prev.map(metric =>
-        metric.channel_id === channelId ? { ...metric, [field]: numValue } : metric
+    // Only update if it's a valid number or empty
+    if (value === '' || !isNaN(numValue)) {
+      // Optimistic update
+      setLocalMetrics(prev =>
+        prev.map(metric =>
+          metric.channel_id === channelId ? { ...metric, [field]: numValue } : metric
+        )
       )
-    )
 
-    const metric = salesMetrics.find((m) => m.channel_id === channelId)
-    if (!metric) return
+      const metric = salesMetrics.find((m) => m.channel_id === channelId)
+      if (!metric) return
 
-    // Clear existing timer
-    const timerKey = `${metric.id}-${field}`
-    if (updateTimers.current[timerKey]) {
-      clearTimeout(updateTimers.current[timerKey])
+      // Clear existing timer
+      const timerKey = `${metric.id}-${field}`
+      if (updateTimers.current[timerKey]) {
+        clearTimeout(updateTimers.current[timerKey])
+      }
+
+      // Debounced Supabase update
+      updateTimers.current[timerKey] = setTimeout(async () => {
+        await supabase
+          .from('sales_metrics')
+          .update({ [field]: numValue })
+          .eq('id', metric.id)
+
+        delete updateTimers.current[timerKey]
+      }, 500)
     }
-
-    // Debounced Supabase update
-    updateTimers.current[timerKey] = setTimeout(async () => {
-      await supabase
-        .from('sales_metrics')
-        .update({ [field]: numValue })
-        .eq('id', metric.id)
-
-      delete updateTimers.current[timerKey]
-    }, 500)
   }
 
   const addSalesStatus = async () => {
@@ -152,7 +156,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                       {isDraftMode ? (
                         <Input
                           type="number"
-                          value={metric?.leads_count || 0}
+                          value={metric?.leads_count ?? ''}
                           onChange={(e) =>
                             updateMetric(
                               channel.id,
@@ -161,6 +165,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                             )
                           }
                           className="text-center"
+                          min="0"
                         />
                       ) : (
                         <div className="text-center text-[var(--foreground)] font-semibold">
@@ -172,7 +177,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                       {isDraftMode ? (
                         <Input
                           type="number"
-                          value={metric?.appointments_count || 0}
+                          value={metric?.appointments_count ?? ''}
                           onChange={(e) =>
                             updateMetric(
                               channel.id,
@@ -181,6 +186,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                             )
                           }
                           className="text-center"
+                          min="0"
                         />
                       ) : (
                         <div className="text-center text-[var(--foreground)] font-semibold">
@@ -192,7 +198,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                       {isDraftMode ? (
                         <Input
                           type="number"
-                          value={metric?.contracts_count || 0}
+                          value={metric?.contracts_count ?? ''}
                           onChange={(e) =>
                             updateMetric(
                               channel.id,
@@ -201,6 +207,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                             )
                           }
                           className="text-center"
+                          min="0"
                         />
                       ) : (
                         <div className="text-center text-[var(--foreground)] font-semibold">
