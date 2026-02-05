@@ -48,12 +48,14 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
   const updateMetric = (
     channelId: string,
     field: 'leads_count' | 'appointments_count' | 'contracts_count',
-    value: number
+    value: string
   ) => {
+    const numValue = parseInt(value) || 0
+
     // Optimistic update
     setLocalMetrics(prev =>
       prev.map(metric =>
-        metric.channel_id === channelId ? { ...metric, [field]: value } : metric
+        metric.channel_id === channelId ? { ...metric, [field]: numValue } : metric
       )
     )
 
@@ -70,7 +72,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
     updateTimers.current[timerKey] = setTimeout(async () => {
       await supabase
         .from('sales_metrics')
-        .update({ [field]: value })
+        .update({ [field]: numValue })
         .eq('id', metric.id)
 
       delete updateTimers.current[timerKey]
@@ -155,7 +157,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                             updateMetric(
                               channel.id,
                               'leads_count',
-                              parseInt(e.target.value) || 0
+                              e.target.value
                             )
                           }
                           className="text-center"
@@ -175,7 +177,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                             updateMetric(
                               channel.id,
                               'appointments_count',
-                              parseInt(e.target.value) || 0
+                              e.target.value
                             )
                           }
                           className="text-center"
@@ -195,7 +197,7 @@ export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
                             updateMetric(
                               channel.id,
                               'contracts_count',
-                              parseInt(e.target.value) || 0
+                              e.target.value
                             )
                           }
                           className="text-center"

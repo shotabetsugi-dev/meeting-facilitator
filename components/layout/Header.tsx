@@ -29,12 +29,20 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
 
     console.log('Starting meeting...', meetingId)
 
+    const now = new Date()
+    const timeString = now.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+
     const { data, error } = await supabase
       .from('meetings')
       .update({
         status: 'in_progress',
-        pre_input_completed_at: new Date().toISOString(),
-        start_time: new Date().toISOString(),
+        pre_input_completed_at: now.toISOString(),
+        start_time: timeString,
       })
       .eq('id', meetingId)
       .select()
@@ -62,11 +70,19 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
 
     console.log('Completing meeting...', meetingId)
 
+    const now = new Date()
+    const timeString = now.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+
     const { data, error } = await supabase
       .from('meetings')
       .update({
         status: 'completed',
-        end_time: new Date().toISOString(),
+        end_time: timeString,
       })
       .eq('id', meetingId)
       .select()

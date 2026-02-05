@@ -8,7 +8,16 @@
       "Bash(netstat:*)",
       "Bash(cmd.exe /c \"taskkill /PID 15160 /F\")",
       "Bash(powershell.exe -Command \"Stop-Process -Id 15160 -Force\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vercel:*)"
     ]
   }
 }
