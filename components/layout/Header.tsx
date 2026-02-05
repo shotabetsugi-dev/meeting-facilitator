@@ -119,16 +119,37 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
   return (
     <header className="border-b border-[var(--card-border)] px-6 py-4 bg-[var(--card-bg)]/50 backdrop-blur-sm">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            <span className="bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-middle)] to-[var(--gradient-end)] bg-clip-text text-transparent">
-              Lays-Lop
-            </span>
-            <span className="text-[var(--accent-blue)]"> Internal meeting</span>
-          </h1>
-          {meetingDate && (
-            <p className="text-sm text-[var(--foreground)]/60 mt-1">{meetingDate}</p>
-          )}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/')}
+            className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition-colors"
+            title="会議一覧に戻る"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">
+              <span className="bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-middle)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                Lays-Lop
+              </span>
+              <span className="text-[var(--accent-blue)]"> Internal meeting</span>
+            </h1>
+            {meetingDate && (
+              <p className="text-sm text-[var(--foreground)]/60 mt-1">{meetingDate}</p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           {meeting && getStatusBadge(meeting.status)}
