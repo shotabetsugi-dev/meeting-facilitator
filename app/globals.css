@@ -73,6 +73,18 @@ body {
   pointer-events: none;
 }
 
+/* 数値入力のスピナー非表示 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* スクロールバーのスタイリング */
 ::-webkit-scrollbar {
   width: 8px;
