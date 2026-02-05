@@ -5,16 +5,20 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Textarea } from '@/components/ui/Textarea'
 import { useState, useEffect, useRef } from 'react'
+import type { Meeting } from '@/types'
 
 interface AnnounceSectionProps {
   meetingId: string
+  meeting?: Meeting
 }
 
-export function AnnounceSection({ meetingId }: AnnounceSectionProps) {
+export function AnnounceSection({ meetingId, meeting }: AnnounceSectionProps) {
   const { announcement } = useMeetingStore()
   const supabase = createClient()
   const [localContent, setLocalContent] = useState('')
-  const updateTimer = useRef<NodeJS.Timeout>()
+  const updateTimer = useRef<NodeJS.Timeout | undefined>(undefined)
+
+  const isDraftMode = !meeting || meeting.status === 'draft'
 
   useEffect(() => {
     setLocalContent(announcement?.content || '')
@@ -46,12 +50,20 @@ export function AnnounceSection({ meetingId }: AnnounceSectionProps) {
 
   return (
     <Card title="アナウンス">
-      <Textarea
-        value={localContent}
-        onChange={(e) => updateAnnouncement(e.target.value)}
-        placeholder="全体アナウンスを記入..."
-        rows={10}
-      />
+      {isDraftMode ? (
+        <Textarea
+          value={localContent}
+          onChange={(e) => updateAnnouncement(e.target.value)}
+          placeholder="全体アナウンスを記入..."
+          rows={10}
+        />
+      ) : (
+        <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)]">
+          <p className="text-sm text-[var(--foreground)]/80 whitespace-pre-wrap">
+            {localContent || '未設定'}
+          </p>
+        </div>
+      )}
     </Card>
   )
 }

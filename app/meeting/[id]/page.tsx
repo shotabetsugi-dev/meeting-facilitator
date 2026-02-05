@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useMeetingStore } from '@/stores/meetingStore'
 import { useRealtime } from '@/hooks/useRealtime'
@@ -13,12 +13,15 @@ import { DevSection } from '@/components/meeting/DevSection'
 import { AnnounceSection } from '@/components/meeting/AnnounceSection'
 import { FreeSection } from '@/components/meeting/FreeSection'
 import { DebateSection } from '@/components/meeting/DebateSection'
+import { AIInsightsPanel } from '@/components/ai/AIInsightsPanel'
+import { ChatPanel } from '@/components/chat/ChatPanel'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { formatDate } from '@/lib/utils'
 import type { Meeting } from '@/types'
 
 export default function MeetingPage() {
   const params = useParams()
+  const router = useRouter()
   const meetingId = params.id as string
   const supabase = createClient()
   const { setCurrentMeeting, currentMeeting } = useMeetingStore()
@@ -31,15 +34,7 @@ export default function MeetingPage() {
 
   useEffect(() => {
     fetchMeeting()
-    // ユーザー名をローカルストレージから取得（なければデフォルト値）
-    const storedName = localStorage.getItem('userName')
-    if (storedName) {
-      setUserName(storedName)
-    } else {
-      const name = prompt('あなたの名前を入力してください') || 'ユーザー'
-      localStorage.setItem('userName', name)
-      setUserName(name)
-    }
+    fetchUser()
 
     // meetingsテーブルのリアルタイム購読
     const meetingChannel = supabase
@@ -65,6 +60,18 @@ export default function MeetingPage() {
       supabase.removeChannel(meetingChannel)
     }
   }, [meetingId])
+
+  const fetchUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      // Get name from user metadata
+      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'ユーザー'
+      setUserName(name)
+    }
+  }
 
   const fetchMeeting = async () => {
     setLoading(true)
@@ -96,9 +103,51 @@ export default function MeetingPage() {
     )
   }
 
-  const handleMeetingStart = () => {
-    // AI insights generation will be triggered here in the future
+  const handleMeetingStart = async () => {
     console.log('Meeting started, generating AI insights...')
+
+    try {
+      const response = await fetch('/api/generate-insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ meetingId }),
+      })
+
+      if (response.ok) {
+        console.log('AI insights generated successfully')
+      } else {
+        console.error('Failed to generate AI insights')
+      }
+    } catch (error) {
+      console.error('Error calling AI insights API:', error)
+    }
+  }
+
+  const handleMeetingComplete = async () => {
+    console.log('Meeting completed, generating report...')
+
+    try {
+      const response = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ meetingId }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Report generated successfully:', data.report)
+        // レポートページに遷移
+        router.push(`/meeting/${meetingId}/report`)
+      } else {
+        console.error('Failed to generate report')
+      }
+    } catch (error) {
+      console.error('Error calling report generation API:', error)
+    }
   }
 
   return (
@@ -109,17 +158,31 @@ export default function MeetingPage() {
         meetingDate={formatDate(currentMeeting.meeting_date)}
         meeting={currentMeeting}
         onMeetingStart={handleMeetingStart}
+        onMeetingComplete={handleMeetingComplete}
       />
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="max-w-7xl mx-auto py-8 px-6">
-        {activeTab === 'agenda' && <AgendaSection meetingId={meetingId} meeting={currentMeeting} />}
-        {activeTab === 'sales' && <SalesSection meetingId={meetingId} meeting={currentMeeting} />}
-        {activeTab === 'dev' && <DevSection meetingId={meetingId} meeting={currentMeeting} />}
-        {activeTab === 'announce' && <AnnounceSection meetingId={meetingId} meeting={currentMeeting} />}
-        {activeTab === 'free' && <FreeSection meetingId={meetingId} meeting={currentMeeting} />}
-        {activeTab === 'debate' && <DebateSection meetingId={meetingId} meeting={currentMeeting} />}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* メインコンテンツ */}
+          <div className="lg:col-span-2">
+            {activeTab === 'agenda' && <AgendaSection meetingId={meetingId} meeting={currentMeeting} />}
+            {activeTab === 'sales' && <SalesSection meetingId={meetingId} meeting={currentMeeting} />}
+            {activeTab === 'dev' && <DevSection meetingId={meetingId} meeting={currentMeeting} />}
+            {activeTab === 'announce' && <AnnounceSection meetingId={meetingId} meeting={currentMeeting} />}
+            {activeTab === 'free' && <FreeSection meetingId={meetingId} meeting={currentMeeting} />}
+            {activeTab === 'debate' && <DebateSection meetingId={meetingId} meeting={currentMeeting} />}
+          </div>
+
+          {/* AIインサイト & チャットサイドバー */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 space-y-6">
+              <AIInsightsPanel meetingId={meetingId} />
+              <ChatPanel meetingId={meetingId} userName={userName} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
 import { formatDate } from '@/lib/utils'
 import type { Meeting } from '@/types'
 
@@ -14,14 +15,32 @@ export default function Home() {
   const supabase = createClient()
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [loading, setLoading] = useState(true)
-  const [showNewMeeting, setShowNewMeeting] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [newMeetingDate, setNewMeetingDate] = useState(
     new Date().toISOString().split('T')[0]
   )
+  const [userName, setUserName] = useState('')
 
   useEffect(() => {
     fetchMeetings()
+    fetchUser()
   }, [])
+
+  const fetchUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'ユーザー'
+      setUserName(name)
+    }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   const fetchMeetings = async () => {
     setLoading(true)
@@ -48,12 +67,18 @@ export default function Home() {
       .single()
 
     if (!error && data) {
+      setIsModalOpen(false)
       router.push(`/meeting/${data.id}`)
     }
   }
 
   const goToMeeting = (id: string) => {
     router.push(`/meeting/${id}`)
+  }
+
+  const goToReport = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation() // カードのクリックイベントを止める
+    router.push(`/meeting/${id}/report`)
   }
 
   if (loading) {
@@ -67,52 +92,60 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <div className="max-w-6xl mx-auto py-12 px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-middle)] to-[var(--gradient-end)] bg-clip-text text-transparent">
-              Lays-Lop
-            </span>
-            <span className="text-[var(--accent-blue)]"> Internal meeting</span>
-          </h1>
-          <p className="text-[var(--foreground)]/60">
-            会議を選択するか、新しい会議を作成してください
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-[var(--gradient-start)] via-[var(--gradient-middle)] to-[var(--gradient-end)] bg-clip-text text-transparent">
+                Lays-Lop
+              </span>
+              <span className="text-[var(--accent-blue)]"> Internal meeting</span>
+            </h1>
+            <p className="text-[var(--foreground)]/60">
+              会議を選択するか、新しい会議を作成してください
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-[var(--foreground)]/80">👤 {userName}</span>
+            <Button variant="secondary" size="sm" onClick={handleLogout}>
+              ログアウト
+            </Button>
+          </div>
         </div>
 
-        {/* 新規会議作成 */}
-        <Card className="mb-8">
-          {!showNewMeeting ? (
-            <Button
-              onClick={() => setShowNewMeeting(true)}
-              className="w-full"
-              size="lg"
-            >
-              新しい会議を作成
-            </Button>
-          ) : (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-[var(--foreground)]">新規会議を作成</h2>
+        {/* 新規会議作成ボタン */}
+        <div className="mb-8">
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full"
+            size="lg"
+          >
+            新しい会議を作成
+          </Button>
+        </div>
+
+        {/* 新規会議作成モーダル */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="新規会議を作成"
+          position="right"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                会議日
+              </label>
               <Input
                 type="date"
                 value={newMeetingDate}
                 onChange={(e) => setNewMeetingDate(e.target.value)}
-                label="会議日"
               />
-              <div className="flex gap-2">
-                <Button onClick={createMeeting} className="flex-1">
-                  作成
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowNewMeeting(false)}
-                  className="flex-1"
-                >
-                  キャンセル
-                </Button>
-              </div>
             </div>
-          )}
-        </Card>
+            <Button onClick={createMeeting} className="w-full" size="lg">
+              会議を作成
+            </Button>
+          </div>
+        </Modal>
 
         {/* 会議一覧 */}
         <div>
@@ -156,6 +189,16 @@ export default function Home() {
                       <p className="text-sm text-[var(--foreground)]/60">
                         参加者: {meeting.participants.join(', ')}
                       </p>
+                    )}
+                    {meeting.status === 'completed' && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="w-full mt-2"
+                        onClick={(e) => goToReport(meeting.id, e)}
+                      >
+                        📄 レポートを表示
+                      </Button>
                     )}
                   </div>
                 </Card>

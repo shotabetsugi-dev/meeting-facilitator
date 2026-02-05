@@ -6,18 +6,21 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
-import type { FreeTopic } from '@/types'
+import type { FreeTopic, Meeting } from '@/types'
 
 interface FreeSectionProps {
   meetingId: string
+  meeting?: Meeting
 }
 
-export function FreeSection({ meetingId }: FreeSectionProps) {
+export function FreeSection({ meetingId, meeting }: FreeSectionProps) {
   const { freeTopics } = useMeetingStore()
   const supabase = createClient()
   const [newTopic, setNewTopic] = useState('')
   const [localTopics, setLocalTopics] = useState<FreeTopic[]>([])
   const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
+
+  const isDraftMode = !meeting || meeting.status === 'draft'
 
   // Sync topics from store to local state
   useEffect(() => {
@@ -77,37 +80,50 @@ export function FreeSection({ meetingId }: FreeSectionProps) {
               <span className="text-lg font-bold bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-purple)] bg-clip-text text-transparent">
                 議題 {index + 1}
               </span>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => deleteTopic(topic.id)}
-              >
-                削除
-              </Button>
+              {isDraftMode && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => deleteTopic(topic.id)}
+                >
+                  削除
+                </Button>
+              )}
             </div>
-            <Textarea
-              value={topic.content || ''}
-              onChange={(e) => updateTopic(topic.id, e.target.value)}
-              placeholder="議題内容"
-              rows={4}
-            />
+            {isDraftMode ? (
+              <Textarea
+                value={topic.content || ''}
+                onChange={(e) => updateTopic(topic.id, e.target.value)}
+                placeholder="議題内容"
+                rows={4}
+              />
+            ) : (
+              <div className="p-4 bg-[var(--background)] rounded-lg border border-[var(--card-border)]">
+                <p className="text-sm text-[var(--foreground)]/80 whitespace-pre-wrap">
+                  {topic.content || '未設定'}
+                </p>
+              </div>
+            )}
           </div>
         </Card>
       ))}
 
-      <Card title="新規議題を追加">
-        <div className="space-y-4">
-          <Textarea
-            value={newTopic}
-            onChange={(e) => setNewTopic(e.target.value)}
-            placeholder="議題内容を入力..."
-            rows={4}
-          />
-          <Button onClick={addTopic} disabled={!newTopic}>
-            議題を追加
-          </Button>
-        </div>
-      </Card>
+      {/* 新規議題追加（事前入力モードのみ） */}
+      {isDraftMode && (
+        <Card title="新規議題を追加">
+          <div className="space-y-4">
+            <Textarea
+              value={newTopic}
+              onChange={(e) => setNewTopic(e.target.value)}
+              placeholder="議題内容を入力..."
+              rows={4}
+            />
+            <Button onClick={addTopic} disabled={!newTopic}>
+              議題を追加
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { PresenceIndicator } from './PresenceIndicator'
 import { Button } from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase/client'
@@ -11,10 +12,17 @@ interface HeaderProps {
   meetingDate?: string
   meeting?: Meeting
   onMeetingStart?: () => void
+  onMeetingComplete?: () => void
 }
 
-export function Header({ meetingId, userName, meetingDate, meeting, onMeetingStart }: HeaderProps) {
+export function Header({ meetingId, userName, meetingDate, meeting, onMeetingStart, onMeetingComplete }: HeaderProps) {
   const supabase = createClient()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   const startMeeting = async () => {
     if (!meetingId) return
@@ -43,6 +51,38 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
     // Trigger AI insights generation
     if (onMeetingStart) {
       onMeetingStart()
+    }
+  }
+
+  const completeMeeting = async () => {
+    if (!meetingId) return
+
+    const confirm = window.confirm('会議を完了しますか？完了後は編集できなくなります。')
+    if (!confirm) return
+
+    console.log('Completing meeting...', meetingId)
+
+    const { data, error } = await supabase
+      .from('meetings')
+      .update({
+        status: 'completed',
+        end_time: new Date().toISOString(),
+      })
+      .eq('id', meetingId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Failed to complete meeting:', error)
+      alert('会議の完了に失敗しました: ' + error.message)
+      return
+    }
+
+    console.log('Meeting completed successfully:', data)
+
+    // Trigger report generation
+    if (onMeetingComplete) {
+      onMeetingComplete()
     }
   }
 
@@ -81,9 +121,17 @@ export function Header({ meetingId, userName, meetingDate, meeting, onMeetingSta
               🚀 会議を開始
             </Button>
           )}
+          {meeting && meeting.status === 'in_progress' && (
+            <Button onClick={completeMeeting} size="sm" variant="secondary">
+              ✓ 会議を完了
+            </Button>
+          )}
           {meetingId && userName && (
             <PresenceIndicator meetingId={meetingId} userName={userName} />
           )}
+          <Button variant="secondary" size="sm" onClick={handleLogout}>
+            ログアウト
+          </Button>
         </div>
       </div>
     </header>
