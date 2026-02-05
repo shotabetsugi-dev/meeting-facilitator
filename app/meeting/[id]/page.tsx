@@ -66,12 +66,19 @@ export default function MeetingPage() {
     )
   }
 
+  const handleMeetingStart = () => {
+    // AI insights generation will be triggered here in the future
+    console.log('Meeting started, generating AI insights...')
+  }
+
   return (
     <div className="min-h-screen">
       <Header
         meetingId={meetingId}
         userName={userName}
         meetingDate={formatDate(currentMeeting.meeting_date)}
+        meeting={currentMeeting}
+        onMeetingStart={handleMeetingStart}
       />
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />

@@ -223,3 +223,49 @@ JOIN meetings m ON sm.meeting_id = m.id
 JOIN sales_channels sc ON sm.channel_id = sc.id
 GROUP BY TO_CHAR(m.meeting_date, 'YYYY-MM'), sc.name, sc.color, sc.sort_order
 ORDER BY year_month DESC, sc.sort_order;
+
+-- ============================================
+-- 新しいワークフロー機能の追加
+-- ============================================
+
+-- meetingsテーブルに事前入力完了時刻を追加
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS pre_input_completed_at TIMESTAMPTZ;
+
+-- agendasテーブルに会議中の議論メモと結論フィールドを追加
+ALTER TABLE agendas ADD COLUMN IF NOT EXISTS discussion_notes TEXT;
+ALTER TABLE agendas ADD COLUMN IF NOT EXISTS conclusion TEXT;
+
+-- AI補助情報テーブル（事前入力完了時にAIが生成）
+CREATE TABLE IF NOT EXISTS ai_insights (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+  section_type TEXT NOT NULL, -- 'agenda', 'sales', 'dev', 'general'
+  section_id UUID, -- 関連するアジェンダやセクションのID
+  insight_type TEXT NOT NULL, -- 'suggestion', 'warning', 'analysis', 'tip'
+  title TEXT,
+  content TEXT NOT NULL,
+  priority INT DEFAULT 1, -- 1=低, 2=中, 3=高
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_insights_meeting ON ai_insights(meeting_id);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_section ON ai_insights(meeting_id, section_type);
+
+-- チャットメッセージテーブル（会議中のディスカッション用）
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  meeting_id UUID REFERENCES meetings(id) ON DELETE CASCADE,
+  user_name TEXT NOT NULL,
+  user_color TEXT DEFAULT '#667eea',
+  message TEXT NOT NULL,
+  section_type TEXT, -- どのセクション/議題に関する会話か（'agenda', 'sales', 'dev', 'general'）
+  section_id UUID, -- 関連するアジェンダID等
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_messages_meeting ON chat_messages(meeting_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_section ON chat_messages(meeting_id, section_type, section_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages(created_at DESC);
+
+-- チャットメッセージのリアルタイム通知を有効化
+ALTER TABLE chat_messages REPLICA IDENTITY FULL;

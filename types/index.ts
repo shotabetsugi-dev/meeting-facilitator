@@ -6,6 +6,7 @@ export interface Meeting {
   end_time?: string
   participants?: string[]
   status: 'draft' | 'in_progress' | 'completed'
+  pre_input_completed_at?: string
   created_at: string
   updated_at: string
 }
@@ -18,6 +19,8 @@ export interface Agenda {
   detail?: string
   content?: string
   action_items?: string
+  discussion_notes?: string
+  conclusion?: string
   sort_order?: number
   created_at: string
   updated_at: string
@@ -140,6 +143,32 @@ export interface UserPresence {
   color: string
 }
 
+// AI Insights (Database)
+export interface AIInsightDB {
+  id: string
+  meeting_id: string
+  section_type: 'agenda' | 'sales' | 'dev' | 'general'
+  section_id?: string
+  insight_type: 'suggestion' | 'warning' | 'analysis' | 'tip'
+  title?: string
+  content: string
+  priority: number
+  created_at: string
+}
+
+// Chat Messages
+export interface ChatMessage {
+  id: string
+  meeting_id: string
+  user_name: string
+  user_color: string
+  message: string
+  section_type?: 'agenda' | 'sales' | 'dev' | 'general'
+  section_id?: string
+  created_at: string
+}
+
+// UI Types
 export interface AIInsight {
   summary?: string
   keyPoints?: string[]
