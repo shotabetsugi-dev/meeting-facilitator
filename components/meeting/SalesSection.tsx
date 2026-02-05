@@ -6,13 +6,14 @@ import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import type { SalesChannel, SalesStatus, SalesMetric } from '@/types'
+import type { SalesChannel, SalesStatus, SalesMetric, Meeting } from '@/types'
 
 interface SalesSectionProps {
   meetingId: string
+  meeting?: Meeting
 }
 
-export function SalesSection({ meetingId }: SalesSectionProps) {
+export function SalesSection({ meetingId, meeting }: SalesSectionProps) {
   const { salesMetrics, salesStatus } = useMeetingStore()
   const supabase = createClient()
   const [channels, setChannels] = useState<SalesChannel[]>([])
@@ -20,6 +21,8 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
   const [localMetrics, setLocalMetrics] = useState<SalesMetric[]>([])
   const [localStatus, setLocalStatus] = useState<SalesStatus[]>([])
   const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
+
+  const isDraftMode = !meeting || meeting.status === 'draft'
 
   useEffect(() => {
     fetchChannels()
@@ -144,46 +147,64 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
                       </div>
                     </td>
                     <td className="py-2 px-4">
-                      <Input
-                        type="number"
-                        value={metric?.leads_count || 0}
-                        onChange={(e) =>
-                          updateMetric(
-                            channel.id,
-                            'leads_count',
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="text-center"
-                      />
+                      {isDraftMode ? (
+                        <Input
+                          type="number"
+                          value={metric?.leads_count || 0}
+                          onChange={(e) =>
+                            updateMetric(
+                              channel.id,
+                              'leads_count',
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="text-center"
+                        />
+                      ) : (
+                        <div className="text-center text-[var(--foreground)] font-semibold">
+                          {metric?.leads_count || 0}
+                        </div>
+                      )}
                     </td>
                     <td className="py-2 px-4">
-                      <Input
-                        type="number"
-                        value={metric?.appointments_count || 0}
-                        onChange={(e) =>
-                          updateMetric(
-                            channel.id,
-                            'appointments_count',
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="text-center"
-                      />
+                      {isDraftMode ? (
+                        <Input
+                          type="number"
+                          value={metric?.appointments_count || 0}
+                          onChange={(e) =>
+                            updateMetric(
+                              channel.id,
+                              'appointments_count',
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="text-center"
+                        />
+                      ) : (
+                        <div className="text-center text-[var(--foreground)] font-semibold">
+                          {metric?.appointments_count || 0}
+                        </div>
+                      )}
                     </td>
                     <td className="py-2 px-4">
-                      <Input
-                        type="number"
-                        value={metric?.contracts_count || 0}
-                        onChange={(e) =>
-                          updateMetric(
-                            channel.id,
-                            'contracts_count',
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="text-center"
-                      />
+                      {isDraftMode ? (
+                        <Input
+                          type="number"
+                          value={metric?.contracts_count || 0}
+                          onChange={(e) =>
+                            updateMetric(
+                              channel.id,
+                              'contracts_count',
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="text-center"
+                        />
+                      ) : (
+                        <div className="text-center text-[var(--foreground)] font-semibold">
+                          {metric?.contracts_count || 0}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 )

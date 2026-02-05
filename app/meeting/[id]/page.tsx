@@ -84,12 +84,12 @@ export default function MeetingPage() {
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="max-w-7xl mx-auto py-8 px-6">
-        {activeTab === 'agenda' && <AgendaSection meetingId={meetingId} />}
-        {activeTab === 'sales' && <SalesSection meetingId={meetingId} />}
-        {activeTab === 'dev' && <DevSection meetingId={meetingId} />}
-        {activeTab === 'announce' && <AnnounceSection meetingId={meetingId} />}
-        {activeTab === 'free' && <FreeSection meetingId={meetingId} />}
-        {activeTab === 'debate' && <DebateSection meetingId={meetingId} />}
+        {activeTab === 'agenda' && <AgendaSection meetingId={meetingId} meeting={currentMeeting} />}
+        {activeTab === 'sales' && <SalesSection meetingId={meetingId} meeting={currentMeeting} />}
+        {activeTab === 'dev' && <DevSection meetingId={meetingId} meeting={currentMeeting} />}
+        {activeTab === 'announce' && <AnnounceSection meetingId={meetingId} meeting={currentMeeting} />}
+        {activeTab === 'free' && <FreeSection meetingId={meetingId} meeting={currentMeeting} />}
+        {activeTab === 'debate' && <DebateSection meetingId={meetingId} meeting={currentMeeting} />}
       </div>
     </div>
   )
