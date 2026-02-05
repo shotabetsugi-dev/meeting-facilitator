@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useMeetingStore } from '@/stores/meetingStore'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { DebateTimer } from '@/components/debate/DebateTimer'
+import type { Debate } from '@/types'
 
 interface DebateSectionProps {
   meetingId: string
@@ -15,13 +16,17 @@ interface DebateSectionProps {
 export function DebateSection({ meetingId }: DebateSectionProps) {
   const { debate } = useMeetingStore()
   const supabase = createClient()
+  const [localDebate, setLocalDebate] = useState<Debate | null>(null)
+  const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
 
   useEffect(() => {
     // ディベートデータがない場合は作成
     if (!debate) {
       createDebate()
+    } else {
+      setLocalDebate(debate)
     }
-  }, [])
+  }, [debate])
 
   const createDebate = async () => {
     await supabase.from('debates').insert({
@@ -30,17 +35,31 @@ export function DebateSection({ meetingId }: DebateSectionProps) {
     })
   }
 
-  const updateDebate = async (field: string, value: string) => {
-    if (!debate) return
+  const updateDebate = (field: string, value: string) => {
+    if (!localDebate) return
 
-    await supabase
-      .from('debates')
-      .update({ [field]: value })
-      .eq('id', debate.id)
+    // Optimistic update
+    setLocalDebate({ ...localDebate, [field]: value })
+
+    // Clear existing timer
+    const timerKey = field
+    if (updateTimers.current[timerKey]) {
+      clearTimeout(updateTimers.current[timerKey])
+    }
+
+    // Debounced Supabase update
+    updateTimers.current[timerKey] = setTimeout(async () => {
+      await supabase
+        .from('debates')
+        .update({ [field]: value })
+        .eq('id', localDebate.id)
+
+      delete updateTimers.current[timerKey]
+    }, 500)
   }
 
-  if (!debate) {
-    return <div>Loading...</div>
+  if (!localDebate) {
+    return <div className="text-[var(--foreground)]/60">Loading...</div>
   }
 
   return (
@@ -50,24 +69,24 @@ export function DebateSection({ meetingId }: DebateSectionProps) {
         <Card title="ディベートテーマ">
           <div className="space-y-4">
             <Input
-              value={debate.theme || ''}
+              value={localDebate.theme || ''}
               onChange={(e) => updateDebate('theme', e.target.value)}
               placeholder="テーマを入力..."
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
-                value={debate.pro_side || ''}
+                value={localDebate.pro_side || ''}
                 onChange={(e) => updateDebate('pro_side', e.target.value)}
                 placeholder="賛成派"
               />
               <Input
-                value={debate.con_side || ''}
+                value={localDebate.con_side || ''}
                 onChange={(e) => updateDebate('con_side', e.target.value)}
                 placeholder="反対派"
               />
             </div>
             <Textarea
-              value={debate.memo || ''}
+              value={localDebate.memo || ''}
               onChange={(e) => updateDebate('memo', e.target.value)}
               placeholder="メモ"
               rows={4}
@@ -78,7 +97,7 @@ export function DebateSection({ meetingId }: DebateSectionProps) {
 
       {/* 右側: タイマー */}
       <div>
-        <DebateTimer meetingId={meetingId} debateId={debate.id} />
+        <DebateTimer meetingId={meetingId} debateId={localDebate.id} />
       </div>
     </div>
   )

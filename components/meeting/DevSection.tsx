@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import type { DevProject } from '@/types'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface DevSectionProps {
   meetingId: string
@@ -17,9 +17,15 @@ export function DevSection({ meetingId }: DevSectionProps) {
   const { devProjects } = useMeetingStore()
   const supabase = createClient()
   const [newProject, setNewProject] = useState({ name: '', type: 'client' as 'client' | 'internal' })
+  const [localProjects, setLocalProjects] = useState<DevProject[]>([])
+  const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
 
-  const clientProjects = devProjects.filter((p) => p.project_type === 'client')
-  const internalProjects = devProjects.filter((p) => p.project_type === 'internal')
+  useEffect(() => {
+    setLocalProjects(devProjects)
+  }, [devProjects])
+
+  const clientProjects = localProjects.filter((p) => p.project_type === 'client')
+  const internalProjects = localProjects.filter((p) => p.project_type === 'internal')
 
   const addProject = async () => {
     if (!newProject.name) return
@@ -36,15 +42,33 @@ export function DevSection({ meetingId }: DevSectionProps) {
     setNewProject({ name: '', type: 'client' })
   }
 
-  const updateProject = async (
+  const updateProject = (
     id: string,
     field: keyof DevProject,
     value: string
   ) => {
-    await supabase
-      .from('dev_projects')
-      .update({ [field]: value })
-      .eq('id', id)
+    // Optimistic update
+    setLocalProjects(prev =>
+      prev.map(project =>
+        project.id === id ? { ...project, [field]: value } : project
+      )
+    )
+
+    // Clear existing timer
+    const timerKey = `${id}-${field}`
+    if (updateTimers.current[timerKey]) {
+      clearTimeout(updateTimers.current[timerKey])
+    }
+
+    // Debounced Supabase update
+    updateTimers.current[timerKey] = setTimeout(async () => {
+      await supabase
+        .from('dev_projects')
+        .update({ [field]: value })
+        .eq('id', id)
+
+      delete updateTimers.current[timerKey]
+    }, 500)
   }
 
   const renderProjectTable = (projects: DevProject[]) => (

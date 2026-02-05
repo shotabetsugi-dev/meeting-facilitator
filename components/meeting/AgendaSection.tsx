@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMeetingStore } from '@/stores/meetingStore'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
@@ -14,9 +14,16 @@ interface AgendaSectionProps {
 }
 
 export function AgendaSection({ meetingId }: AgendaSectionProps) {
-  const { agendas } = useMeetingStore()
+  const { agendas, updateAgenda: updateAgendaInStore } = useMeetingStore()
   const supabase = createClient()
   const [newAgenda, setNewAgenda] = useState({ title: '', detail: '' })
+  const [localAgendas, setLocalAgendas] = useState<Agenda[]>([])
+  const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
+
+  // Sync agendas from store to local state
+  useEffect(() => {
+    setLocalAgendas(agendas)
+  }, [agendas])
 
   const addAgenda = async () => {
     if (!newAgenda.title) return
@@ -38,17 +45,35 @@ export function AgendaSection({ meetingId }: AgendaSectionProps) {
     }
   }
 
-  const updateAgenda = async (id: string, field: keyof Agenda, value: string) => {
-    await supabase
-      .from('agendas')
-      .update({ [field]: value })
-      .eq('id', id)
+  const updateAgenda = (id: string, field: keyof Agenda, value: string) => {
+    // Optimistic update - update local state immediately
+    setLocalAgendas(prev =>
+      prev.map(agenda =>
+        agenda.id === id ? { ...agenda, [field]: value } : agenda
+      )
+    )
+
+    // Clear existing timer for this field
+    const timerKey = `${id}-${field}`
+    if (updateTimers.current[timerKey]) {
+      clearTimeout(updateTimers.current[timerKey])
+    }
+
+    // Debounced Supabase update (500ms after user stops typing)
+    updateTimers.current[timerKey] = setTimeout(async () => {
+      await supabase
+        .from('agendas')
+        .update({ [field]: value })
+        .eq('id', id)
+
+      delete updateTimers.current[timerKey]
+    }, 500)
   }
 
   return (
     <div className="space-y-6">
       {/* 既存議題 */}
-      {agendas.map((agenda) => (
+      {localAgendas.map((agenda) => (
         <Card key={agenda.id}>
           <div className="space-y-4">
             <div className="flex items-center gap-4">

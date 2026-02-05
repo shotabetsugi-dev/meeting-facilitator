@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useMeetingStore } from '@/stores/meetingStore'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import type { SalesChannel, SalesStatus } from '@/types'
+import type { SalesChannel, SalesStatus, SalesMetric } from '@/types'
 
 interface SalesSectionProps {
   meetingId: string
@@ -17,10 +17,21 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
   const supabase = createClient()
   const [channels, setChannels] = useState<SalesChannel[]>([])
   const [newCompany, setNewCompany] = useState('')
+  const [localMetrics, setLocalMetrics] = useState<SalesMetric[]>([])
+  const [localStatus, setLocalStatus] = useState<SalesStatus[]>([])
+  const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
 
   useEffect(() => {
     fetchChannels()
   }, [])
+
+  useEffect(() => {
+    setLocalMetrics(salesMetrics)
+  }, [salesMetrics])
+
+  useEffect(() => {
+    setLocalStatus(salesStatus)
+  }, [salesStatus])
 
   const fetchChannels = async () => {
     const { data } = await supabase
@@ -31,18 +42,36 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
     if (data) setChannels(data)
   }
 
-  const updateMetric = async (
+  const updateMetric = (
     channelId: string,
     field: 'leads_count' | 'appointments_count' | 'contracts_count',
     value: number
   ) => {
+    // Optimistic update
+    setLocalMetrics(prev =>
+      prev.map(metric =>
+        metric.channel_id === channelId ? { ...metric, [field]: value } : metric
+      )
+    )
+
     const metric = salesMetrics.find((m) => m.channel_id === channelId)
-    if (metric) {
+    if (!metric) return
+
+    // Clear existing timer
+    const timerKey = `${metric.id}-${field}`
+    if (updateTimers.current[timerKey]) {
+      clearTimeout(updateTimers.current[timerKey])
+    }
+
+    // Debounced Supabase update
+    updateTimers.current[timerKey] = setTimeout(async () => {
       await supabase
         .from('sales_metrics')
         .update({ [field]: value })
         .eq('id', metric.id)
-    }
+
+      delete updateTimers.current[timerKey]
+    }, 500)
   }
 
   const addSalesStatus = async () => {
@@ -57,15 +86,33 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
     setNewCompany('')
   }
 
-  const updateSalesStatus = async (
+  const updateSalesStatus = (
     id: string,
     field: keyof SalesStatus,
     value: string
   ) => {
-    await supabase
-      .from('sales_status')
-      .update({ [field]: value })
-      .eq('id', id)
+    // Optimistic update
+    setLocalStatus(prev =>
+      prev.map(status =>
+        status.id === id ? { ...status, [field]: value } : status
+      )
+    )
+
+    // Clear existing timer
+    const timerKey = `${id}-${field}`
+    if (updateTimers.current[timerKey]) {
+      clearTimeout(updateTimers.current[timerKey])
+    }
+
+    // Debounced Supabase update
+    updateTimers.current[timerKey] = setTimeout(async () => {
+      await supabase
+        .from('sales_status')
+        .update({ [field]: value })
+        .eq('id', id)
+
+      delete updateTimers.current[timerKey]
+    }, 500)
   }
 
   return (
@@ -84,7 +131,7 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
             </thead>
             <tbody>
               {channels.map((channel) => {
-                const metric = salesMetrics.find((m) => m.channel_id === channel.id)
+                const metric = localMetrics.find((m) => m.channel_id === channel.id)
                 return (
                   <tr key={channel.id} className="border-b border-[var(--card-border)]">
                     <td className="py-2 px-4">
@@ -149,7 +196,7 @@ export function SalesSection({ meetingId }: SalesSectionProps) {
       {/* 営業状況 */}
       <Card title="営業状況">
         <div className="space-y-4">
-          {salesStatus.map((status) => (
+          {localStatus.map((status) => (
             <div key={status.id} className="border-b border-[var(--card-border)] pb-4">
               <Input
                 value={status.company_name}

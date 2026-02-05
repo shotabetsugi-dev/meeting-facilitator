@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMeetingStore } from '@/stores/meetingStore'
 import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
+import type { FreeTopic } from '@/types'
 
 interface FreeSectionProps {
   meetingId: string
@@ -15,6 +16,13 @@ export function FreeSection({ meetingId }: FreeSectionProps) {
   const { freeTopics } = useMeetingStore()
   const supabase = createClient()
   const [newTopic, setNewTopic] = useState('')
+  const [localTopics, setLocalTopics] = useState<FreeTopic[]>([])
+  const updateTimers = useRef<{ [key: string]: NodeJS.Timeout }>({})
+
+  // Sync topics from store to local state
+  useEffect(() => {
+    setLocalTopics(freeTopics)
+  }, [freeTopics])
 
   const addTopic = async () => {
     if (!newTopic) return
@@ -28,11 +36,29 @@ export function FreeSection({ meetingId }: FreeSectionProps) {
     setNewTopic('')
   }
 
-  const updateTopic = async (id: string, content: string) => {
-    await supabase
-      .from('free_topics')
-      .update({ content })
-      .eq('id', id)
+  const updateTopic = (id: string, content: string) => {
+    // Optimistic update
+    setLocalTopics(prev =>
+      prev.map(topic =>
+        topic.id === id ? { ...topic, content } : topic
+      )
+    )
+
+    // Clear existing timer
+    const timerKey = id
+    if (updateTimers.current[timerKey]) {
+      clearTimeout(updateTimers.current[timerKey])
+    }
+
+    // Debounced Supabase update
+    updateTimers.current[timerKey] = setTimeout(async () => {
+      await supabase
+        .from('free_topics')
+        .update({ content })
+        .eq('id', id)
+
+      delete updateTimers.current[timerKey]
+    }, 500)
   }
 
   const deleteTopic = async (id: string) => {
@@ -44,7 +70,7 @@ export function FreeSection({ meetingId }: FreeSectionProps) {
 
   return (
     <div className="space-y-6">
-      {freeTopics.map((topic, index) => (
+      {localTopics.map((topic, index) => (
         <Card key={topic.id}>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
