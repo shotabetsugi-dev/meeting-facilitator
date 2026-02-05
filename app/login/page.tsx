@@ -41,6 +41,8 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
+    console.log('Starting signup...')
+
     const { error: signUpError, data } = await supabase.auth.signUp({
       email,
       password,
@@ -48,18 +50,34 @@ export default function LoginPage() {
         data: {
           name: name,
         },
+        emailRedirectTo: `${window.location.origin}/`,
       },
     })
 
+    console.log('Signup response:', { data, error: signUpError })
+
     if (signUpError) {
+      console.error('Signup error:', signUpError)
       setError(signUpError.message)
       setLoading(false)
       return
     }
 
+    // Check if email confirmation is required
+    if (data.user && !data.session) {
+      setError('確認メールを送信しました。メールを確認してアカウントを有効化してください。')
+      setLoading(false)
+      return
+    }
+
     // Auto login after signup
-    if (data.user) {
+    if (data.user && data.session) {
+      console.log('Signup successful, redirecting...')
       router.push('/')
+    } else {
+      setError('アカウントは作成されましたが、ログインに失敗しました。ログインページからログインしてください。')
+      setLoading(false)
+      setIsSignUp(false)
     }
   }
 
